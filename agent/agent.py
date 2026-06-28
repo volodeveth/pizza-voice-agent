@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
@@ -22,6 +23,8 @@ from recorder import SessionRecorder
 
 load_dotenv()
 logger = logging.getLogger("pizza-agent")
+
+SESSIONS_DIR = Path(__file__).resolve().parent.parent / "data" / "sessions"
 
 INSTRUCTIONS = """Ти — привітний голосовий помічник піцерії.
 Спілкуйся українською, природно й коротко, як жива людина по телефону.
@@ -147,7 +150,7 @@ async def entrypoint(ctx: JobContext) -> None:
         except Exception:
             logger.exception("usage summary failed")
         try:
-            path = recorder.save("../data/sessions")
+            path = recorder.save(SESSIONS_DIR)
             logger.info("session saved: %s", path)
         except Exception:
             logger.exception("failed to save session record")
