@@ -5,9 +5,9 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useSessionContext } from '@livekit/components-react';
 import type { AppConfig } from '@/app-config';
 import { AgentSessionView_01 } from '@/components/agents-ui/blocks/agent-session-view-01';
-import { WelcomeView } from '@/components/app/welcome-view';
+import { HomeView } from '@/components/app/home-view';
 
-const MotionWelcomeView = motion.create(WelcomeView);
+const MotionHomeView = motion.create(HomeView);
 const MotionSessionView = motion.create(AgentSessionView_01);
 
 const VIEW_MOTION_PROPS = {
@@ -38,20 +38,21 @@ export function ViewController({ appConfig }: ViewControllerProps) {
 
   return (
     <AnimatePresence mode="wait">
-      {/* Welcome view */}
+      {/* Головна сторінка піцерії */}
       {!isConnected && (
-        <MotionWelcomeView
-          key="welcome"
+        <MotionHomeView
+          key="home"
           {...VIEW_MOTION_PROPS}
           startButtonText={appConfig.startButtonText}
           onStartCall={start}
         />
       )}
-      {/* Session view */}
+      {/* Дзвінок: overlay над сайтом */}
       {isConnected && (
         <MotionSessionView
           key="session-view"
           {...VIEW_MOTION_PROPS}
+          preConnectMessage="Агент слухає — скажіть, що хочете замовити"
           supportsChatInput={appConfig.supportsChatInput}
           supportsVideoInput={appConfig.supportsVideoInput}
           supportsScreenShare={appConfig.supportsScreenShare}

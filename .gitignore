@@ -28,3 +28,7 @@ __MACOSX/
 # IDE
 .vscode/
 .idea/
+
+# Інструментальний кеш / архіви завдання
+.superpowers/
+*.zip
