@@ -3,6 +3,10 @@
 .env.local
 токен.txt
 
+# Дані реальних сесій (містять розмови) — лишаємо лише .gitkeep
+data/sessions/*
+!data/sessions/.gitkeep
+
 # Python
 __pycache__/
 *.py[cod]
