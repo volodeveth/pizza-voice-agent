@@ -48,8 +48,7 @@ Agent Worker (Python, LiveKit Agents)
 │  ├─ tests/              # юніт-тести (pytest)
 │  └─ requirements.txt
 ├─ web/                   # Next.js фронтенд (LiveKit starter) + /analytics
-├─ data/sessions/         # JSON-записи реальних сесій (gitignored)
-└─ docs/                  # специфікація та план реалізації
+└─ data/sessions/         # JSON-записи реальних сесій (gitignored)
 ```
 
 ## ⚙️ Передумови
