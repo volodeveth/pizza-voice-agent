@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import logging
 from pathlib import Path
 from typing import Any
@@ -9,12 +10,10 @@ from livekit.agents import (
     Agent,
     AgentSession,
     JobContext,
-    MetricsCollectedEvent,
     RunContext,
     WorkerOptions,
     cli,
     function_tool,
-    metrics,
 )
 from livekit.plugins import openai
 
@@ -114,48 +113,50 @@ async def entrypoint(ctx: JobContext) -> None:
     await ctx.connect()
 
     recorder = SessionRecorder(room=ctx.room.name)
-    usage_collector = metrics.UsageCollector()
 
     session = AgentSession(
         llm=openai.realtime.RealtimeModel(model="gpt-realtime-mini", voice="marin"),
     )
-
-    @session.on("metrics_collected")
-    def _on_metrics(ev: MetricsCollectedEvent) -> None:
-        try:
-            metrics.log_metrics(ev.metrics)
-            usage_collector.collect(ev.metrics)
-        except Exception:  # never let metrics logging crash the session
-            logger.exception("metrics handler failed")
 
     @session.on("conversation_item_added")
     def _on_item(ev) -> None:
         try:
             item = getattr(ev, "item", ev)
             role = getattr(item, "role", "unknown")
-            text = getattr(item, "text_content", None) or getattr(item, "content", "") or ""
+            text = getattr(item, "text_content", None) or ""
             if not isinstance(text, str):
                 text = str(text)
             recorder.add_turn(role, text)
         except Exception:
             logger.exception("transcript handler failed")
 
-    async def _write_record() -> None:
+    @session.on("session_usage_updated")
+    def _on_usage(ev) -> None:
         try:
-            summary = usage_collector.get_summary()
-            if hasattr(summary, "__dict__"):
-                recorder.set_usage({k: v for k, v in vars(summary).items()})
-            else:
-                recorder.set_usage({"summary": str(summary)})
+            usage = getattr(ev, "usage", ev)
+            recorder.set_usage(
+                dataclasses.asdict(usage)
+                if dataclasses.is_dataclass(usage)
+                else {"summary": str(usage)}
+            )
         except Exception:
-            logger.exception("usage summary failed")
+            logger.exception("usage handler failed")
+
+    _saved = False
+
+    @session.on("close")
+    def _on_close(ev) -> None:
+        # Persist on session close — the reliable hook across console/dev/start
+        # (job-level shutdown callbacks do not fire on Ctrl+C in console mode).
+        nonlocal _saved
+        if _saved:
+            return
+        _saved = True
         try:
             path = recorder.save(SESSIONS_DIR)
             logger.info("session saved: %s", path)
         except Exception:
             logger.exception("failed to save session record")
-
-    ctx.add_shutdown_callback(_write_record)
 
     await session.start(agent=Assistant(recorder), room=ctx.room)
 
