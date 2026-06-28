@@ -1,0 +1,26 @@
+# Секрети — НІКОЛИ не комітити
+.env
+.env.local
+токен.txt
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+
+# OS / Apple Pages службове
+.DS_Store
+__MACOSX/
+*.pages
+
+# IDE
+.vscode/
+.idea/
