@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -177,6 +178,14 @@ async def entrypoint(ctx: JobContext) -> None:
             logger.info("session saved: %s", path)
         except Exception:
             logger.exception("failed to save session record")
+        # Спільне сховище для аналітики на проді (якщо задано DATABASE_URL).
+        db_url = os.environ.get("DATABASE_URL")
+        if db_url:
+            try:
+                recorder.save_to_db(db_url)
+                logger.info("session saved to db")
+            except Exception:
+                logger.exception("failed to save session to db")
 
     await session.start(agent=Assistant(recorder), room=ctx.room)
 

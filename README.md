@@ -164,10 +164,16 @@ lk agent logs                      # живі логи
     для durable — Upstash Redis);
   - **ліміти витрат** у LiveKit Cloud і OpenAI — постав обов'язково (це жорстка стеля рахунку);
   - швидкий вимикач демо — env `CALLS_DISABLED=1` (без редеплою).
-- **Аналітика на Vercel буде порожня:** `data/sessions/*.json` пише воркер на своїй файловій
-  системі (LiveKit Cloud), а serverless-функції Vercel її не бачать. Локально аналітика
-  працює повноцінно. Для live-аналітики потрібне спільне сховище (БД / Vercel Blob) — поза
-  межами демо.
+- **Аналітика на проді — через спільне Postgres (Vercel/Neon).** Локально дані беруться з
+  `data/sessions/*.json`; на проді і воркер (пише), і `/analytics` (читає) ходять у спільну
+  БД Postgres — інакше різні файлові системи не бачать одна одну. Налаштування:
+  1. Vercel → Storage → **Create Database → Postgres (Neon)** → під'єднати до проєкту
+     `pizza-voice-agent` (Vercel сам додасть `DATABASE_URL`/`POSTGRES_URL` в env).
+  2. Застосувати схему: `psql "$DATABASE_URL" -f web/db/schema.sql`.
+  3. Передати воркеру той самий рядок: `lk agent update-secrets --secrets DATABASE_URL=... --overwrite`.
+
+  Якщо `DATABASE_URL` не заданий — і сайт, і воркер тихо відкочуються на файловий режим
+  (працює локально; на serverless-Vercel сторінка буде порожня).
 
 ## ✅ Тести
 

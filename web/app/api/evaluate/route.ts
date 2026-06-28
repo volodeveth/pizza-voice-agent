@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { listSessions } from '@/lib/sessions';
+import { listSessions, saveEvaluation } from '@/lib/sessions';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +37,7 @@ export async function POST(req: Request) {
       ],
     });
     const result = JSON.parse(completion.choices[0].message.content ?? '{}');
+    await saveEvaluation(room, result).catch(() => {}); // кешуємо поруч із сесією (best-effort)
     return NextResponse.json(result);
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
