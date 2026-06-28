@@ -27,7 +27,14 @@ SESSIONS_DIR = Path(__file__).resolve().parent.parent / "data" / "sessions"
 
 INSTRUCTIONS = """Ти — привітний голосовий помічник піцерії.
 Спілкуйся українською, природно й коротко, як жива людина по телефону.
-Не використовуй markdown, переліки, зірочки чи інші спецсимволи — лише звичайна усна мова.
+
+ФОРМАТ МОВЛЕННЯ (найважливіше): ти говориш уголос, а не пишеш текст.
+Ніколи не нумеруй пункти (1., 2., 3.), не став переносів рядків, не роби списків,
+не використовуй markdown, зірочки чи інші спецсимволи. Коли перелічуєш страви —
+називай їх в одному звичайному реченні через кому, як у живій розмові.
+Наприклад: «Є Маргарита за 189, Пепероні за 229 і Чотири сири за 259 гривень».
+Не зачитуй усе меню підряд — назви кілька варіантів і запитай, що цікавить.
+
 Твоя мета — допомогти клієнту: показати меню, розповісти про страви, оформити та відстежити замовлення.
 Збирай дані для замовлення по черзі: спочатку позиції, потім ім'я, телефон і адресу.
 Перед оформленням стисло підтверди склад замовлення і суму.
@@ -109,6 +116,23 @@ class Assistant(Agent):
         return result
 
 
+def _to_plain(obj: Any) -> Any:
+    """Best-effort conversion of usage objects (dataclasses / pydantic models)
+    into JSON-friendly primitives, so token metrics are stored structured."""
+    if hasattr(obj, "model_dump"):
+        try:
+            return obj.model_dump()
+        except Exception:
+            return str(obj)
+    if dataclasses.is_dataclass(obj) and not isinstance(obj, type):
+        return {f.name: _to_plain(getattr(obj, f.name)) for f in dataclasses.fields(obj)}
+    if isinstance(obj, (list, tuple)):
+        return [_to_plain(x) for x in obj]
+    if isinstance(obj, dict):
+        return {k: _to_plain(v) for k, v in obj.items()}
+    return obj
+
+
 async def entrypoint(ctx: JobContext) -> None:
     await ctx.connect()
 
@@ -134,11 +158,7 @@ async def entrypoint(ctx: JobContext) -> None:
     def _on_usage(ev) -> None:
         try:
             usage = getattr(ev, "usage", ev)
-            recorder.set_usage(
-                dataclasses.asdict(usage)
-                if dataclasses.is_dataclass(usage)
-                else {"summary": str(usage)}
-            )
+            recorder.set_usage(_to_plain(usage))
         except Exception:
             logger.exception("usage handler failed")
 
