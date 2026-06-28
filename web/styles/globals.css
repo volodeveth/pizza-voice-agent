@@ -4,82 +4,69 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
+/*
+ * «Wood-fired ніч» — палітра жару в темряві.
+ * Тема єдина (темна): токени shadcn/LiveKit перевизначені на теплі вугільні
+ * значення, тож уся session-машинерія стартера успадковує брендинг автоматично.
+ */
+:root,
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.269 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.439 0 0);
+  --radius: 0.75rem;
+
+  --background: #16110e; /* вугілля */
+  --foreground: #f5ece0; /* крем */
+  --card: #211915; /* поверхня */
+  --card-foreground: #f5ece0;
+  --popover: #211915;
+  --popover-foreground: #f5ece0;
+  --primary: #f0612b; /* жар */
+  --primary-foreground: #16110e;
+  --secondary: #211915;
+  --secondary-foreground: #f5ece0;
+  --muted: #211915;
+  --muted-foreground: #a89a8e; /* приглушений тепло-сірий */
+  --accent: #2a211b;
+  --accent-foreground: #f5ece0;
+  --destructive: #e63946; /* томат */
+  --border: #3a2e27; /* чар */
+  --input: #3a2e27;
+  --ring: #f0612b;
+
+  --chart-1: #f0612b;
+  --chart-2: #ffb347;
+  --chart-3: #e63946;
+  --chart-4: #7fb069;
+  --chart-5: #a89a8e;
+
+  --sidebar: #211915;
+  --sidebar-foreground: #f5ece0;
+  --sidebar-primary: #f0612b;
+  --sidebar-primary-foreground: #16110e;
+  --sidebar-accent: #2a211b;
+  --sidebar-accent-foreground: #f5ece0;
+  --sidebar-border: #3a2e27;
+  --sidebar-ring: #f0612b;
 }
 
 @theme inline {
   --font-sans:
-    var(--font-public-sans), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    var(--font-inter), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-display: var(--font-unbounded), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono:
-    var(--font-commit-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     'Liberation Mono', 'Courier New', monospace;
+
+  /* Іменовані бренд-кольори «Wood-fired» */
+  --color-coal: #16110e;
+  --color-surface: #211915;
+  --color-char: #3a2e27;
+  --color-ember: #f0612b;
+  --color-flame: #ffb347;
+  --color-tomato: #e63946;
+  --color-cream: #f5ece0;
+  --color-ash: #a89a8e;
+  --color-basil: #7fb069;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -116,9 +103,84 @@
 
 @layer base {
   * {
-    @apply border-foreground/20 outline-ring/50;
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/*
+ * Signature: «Жар» — живий вуглик. Дихає повільним пульсом світіння; коли агент
+ * говорить, орб розгоряється (клас .is-speaking). Пульс шанує prefers-reduced-motion.
+ */
+@layer utilities {
+  .ember-glow {
+    background: radial-gradient(
+      circle at 50% 45%,
+      #ffb347 0%,
+      #f0612b 38%,
+      #c33d10 72%,
+      #7a2408 100%
+    );
+    box-shadow:
+      0 0 0 1px rgba(255, 179, 71, 0.35),
+      0 0 24px 4px rgba(240, 97, 43, 0.45),
+      0 0 60px 12px rgba(240, 97, 43, 0.28),
+      inset 0 -8px 24px rgba(122, 36, 8, 0.6),
+      inset 0 8px 18px rgba(255, 179, 71, 0.45);
+  }
+
+  @keyframes ember-breathe {
+    0%,
+    100% {
+      transform: scale(1);
+      box-shadow:
+        0 0 0 1px rgba(255, 179, 71, 0.35),
+        0 0 24px 4px rgba(240, 97, 43, 0.4),
+        0 0 56px 10px rgba(240, 97, 43, 0.22),
+        inset 0 -8px 24px rgba(122, 36, 8, 0.6),
+        inset 0 8px 18px rgba(255, 179, 71, 0.4);
+    }
+    50% {
+      transform: scale(1.045);
+      box-shadow:
+        0 0 0 1px rgba(255, 179, 71, 0.5),
+        0 0 32px 8px rgba(240, 97, 43, 0.6),
+        0 0 84px 22px rgba(240, 97, 43, 0.38),
+        inset 0 -8px 24px rgba(122, 36, 8, 0.55),
+        inset 0 10px 22px rgba(255, 179, 71, 0.6);
+    }
+  }
+
+  .ember-breathe {
+    animation: ember-breathe 3.6s ease-in-out infinite;
+  }
+
+  @keyframes ember-flicker {
+    0%,
+    100% {
+      opacity: 0.85;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  .ember-aura {
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgba(240, 97, 43, 0.28) 0%,
+      rgba(240, 97, 43, 0.12) 35%,
+      transparent 70%
+    );
+    animation: ember-flicker 4.2s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ember-breathe,
+    .ember-aura {
+      animation: none;
+    }
   }
 }

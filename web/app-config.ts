@@ -43,15 +43,15 @@ export const APP_CONFIG_DEFAULTS: AppConfig = {
   isPreConnectBufferEnabled: true,
 
   logo: '/lk-logo.svg',
-  accent: '#E63946',
+  accent: '#F0612B',
   logoDark: '/lk-logo-dark.svg',
-  accentDark: '#E63946',
-  startButtonText: 'Поговорити з помічником',
+  accentDark: '#F0612B',
+  startButtonText: 'Поговорити',
 
-  // audio visualization — wave visualizer for voice waveform "wow" factor
+  // audio visualization — ember-кольорова хвиля голосу («жар» у дзвінку)
   audioVisualizerType: 'wave',
-  audioVisualizerColor: '#E63946',
-  audioVisualizerColorDark: '#E63946',
+  audioVisualizerColor: '#F0612B',
+  audioVisualizerColorDark: '#F0612B',
   audioVisualizerWaveLineWidth: 3,
 
   // agent dispatch configuration
