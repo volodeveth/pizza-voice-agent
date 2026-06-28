@@ -17,6 +17,48 @@ const LIVEKIT_URL = process.env.LIVEKIT_URL;
 // don't cache the results
 export const revalidate = 0;
 
+// ─── Обмеження частоти (rate limit) ──────────────────────────────────────────
+// Простий in-memory лічильник: фіксоване вікно на IP + глобальний бекстоп.
+// Best-effort: на serverless стан живе в межах одного інстансу й скидається на
+// cold start, тож це не куленепробивний захист, а дешевий перший бар'єр проти
+// автоматизованого зловживання (детальніше — у README, розділ про /api/token).
+// Для durable-ліміту через інстанси — Upstash Redis (@upstash/ratelimit).
+const WINDOW_MS = 60_000;
+const MAX_PER_IP = 5; // стартів дзвінка з одного IP за хвилину
+const MAX_GLOBAL = 30; // сумарно стартів за хвилину (бекстоп)
+
+type Bucket = { count: number; resetAt: number };
+const ipBuckets = new Map<string, Bucket>();
+let globalBucket: Bucket = { count: 0, resetAt: 0 };
+
+function checkRateLimit(ip: string): { limited: boolean; retryAfter: number } {
+  const now = Date.now();
+
+  if (now > globalBucket.resetAt) globalBucket = { count: 0, resetAt: now + WINDOW_MS };
+
+  let bucket = ipBuckets.get(ip);
+  if (!bucket || now > bucket.resetAt) {
+    bucket = { count: 0, resetAt: now + WINDOW_MS };
+    ipBuckets.set(ip, bucket);
+  }
+
+  // Періодичне прибирання застарілих ключів, щоб Map не ріс безмежно.
+  if (ipBuckets.size > 5000) {
+    for (const [key, value] of ipBuckets) if (now > value.resetAt) ipBuckets.delete(key);
+  }
+
+  if (bucket.count >= MAX_PER_IP) {
+    return { limited: true, retryAfter: Math.ceil((bucket.resetAt - now) / 1000) };
+  }
+  if (globalBucket.count >= MAX_GLOBAL) {
+    return { limited: true, retryAfter: Math.ceil((globalBucket.resetAt - now) / 1000) };
+  }
+
+  bucket.count++;
+  globalBucket.count++;
+  return { limited: false, retryAfter: 0 };
+}
+
 export async function POST(req: Request) {
   // Цей роут видає LiveKit-токен анонімному відвідувачу, щоб він міг поговорити з агентом —
   // це публічна демо-фіча, тож токен навмисно доступний без автентифікації.
@@ -25,6 +67,16 @@ export async function POST(req: Request) {
   // змінна оточення CALLS_DISABLED=1 (без редеплою коду).
   if (process.env.CALLS_DISABLED === '1') {
     return new NextResponse('Голосове демо тимчасово вимкнено.', { status: 503 });
+  }
+
+  // Обмеження частоти за IP (Vercel проставляє x-forwarded-for).
+  const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown';
+  const { limited, retryAfter } = checkRateLimit(ip);
+  if (limited) {
+    return new NextResponse('Забагато запитів. Спробуйте за хвилину.', {
+      status: 429,
+      headers: { 'Retry-After': String(retryAfter) },
+    });
   }
 
   try {
