@@ -63,5 +63,7 @@ class SessionRecorder:
         # room name may contain characters illegal in filenames — sanitize
         safe_room = "".join(c if c.isalnum() or c in "-_" else "_" for c in self.room) or "room"
         path = directory / f"{safe_room}-{ts}.json"
-        path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+        path.write_text(
+            json.dumps(record, ensure_ascii=False, indent=2, default=str), encoding="utf-8"
+        )
         return path
