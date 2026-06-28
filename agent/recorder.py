@@ -67,3 +67,42 @@ class SessionRecorder:
             json.dumps(record, ensure_ascii=False, indent=2, default=str), encoding="utf-8"
         )
         return path
+
+    def save_to_db(self, database_url: str) -> None:
+        """Записати сесію у спільне сховище Postgres (для аналітики на проді).
+
+        Викликається на завершенні сесії, якщо задано DATABASE_URL. Upsert за (room, started_at),
+        тож повторний запис тієї ж сесії безпечний.
+        """
+        import psycopg
+        from psycopg.types.json import Jsonb
+
+        ended_at = datetime.now(timezone.utc)
+        record = build_record(
+            self.room, self.started_at, ended_at, self.transcript, self.tool_calls, self.usage
+        )
+        with psycopg.connect(database_url) as conn:
+            conn.execute(
+                """
+                INSERT INTO sessions
+                  (room, started_at, ended_at, duration_sec, transcript, tool_calls, usage, metrics)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (room, started_at) DO UPDATE SET
+                  ended_at     = EXCLUDED.ended_at,
+                  duration_sec = EXCLUDED.duration_sec,
+                  transcript   = EXCLUDED.transcript,
+                  tool_calls   = EXCLUDED.tool_calls,
+                  usage        = EXCLUDED.usage,
+                  metrics      = EXCLUDED.metrics
+                """,
+                (
+                    self.room,
+                    self.started_at,
+                    ended_at,
+                    record["duration_sec"],
+                    Jsonb(record["transcript"]),
+                    Jsonb(record["tool_calls"]),
+                    Jsonb(record["usage"]),
+                    Jsonb(record["metrics"]),
+                ),
+            )

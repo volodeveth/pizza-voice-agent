@@ -116,6 +116,10 @@ function Dashboard() {
       .then((d: SessionRecord[]) => {
         setSessions(d);
         setSelected(d[0] ?? null);
+        // Підхопити вже збережені оцінки судді, щоб дашборд їх «пам'ятав»
+        const seeded: Record<string, Evaluation> = {};
+        for (const s of d) if (s.evaluation) seeded[s.room] = s.evaluation;
+        setEvals(seeded);
         setLoading(false);
       })
       .catch(() => setLoading(false));
