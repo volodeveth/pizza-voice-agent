@@ -18,10 +18,13 @@ const LIVEKIT_URL = process.env.LIVEKIT_URL;
 export const revalidate = 0;
 
 export async function POST(req: Request) {
-  if (process.env.NODE_ENV !== 'development') {
-    throw new Error(
-      'THIS API ROUTE IS INSECURE. DO NOT USE THIS ROUTE IN PRODUCTION WITHOUT AN AUTHENTICATION LAYER.'
-    );
+  // Цей роут видає LiveKit-токен анонімному відвідувачу, щоб він міг поговорити з агентом —
+  // це публічна демо-фіча, тож токен навмисно доступний без автентифікації.
+  // РИЗИК: будь-хто з посиланням може створювати кімнати й витрачати ваші LiveKit/OpenAI-хвилини.
+  // Пом'якшення: виставте ліміти витрат у LiveKit Cloud і OpenAI. Швидкий вимикач демо —
+  // змінна оточення CALLS_DISABLED=1 (без редеплою коду).
+  if (process.env.CALLS_DISABLED === '1') {
+    return new NextResponse('Голосове демо тимчасово вимкнено.', { status: 503 });
   }
 
   try {
