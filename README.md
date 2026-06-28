@@ -110,6 +110,62 @@ http://localhost:3000 і почніть розмову.
 
 Дані беруться з `data/sessions/*.json`, які агент пише на кожній розмові.
 
+## 🌍 Деплой (live)
+
+Система має **дві runtime-частини**, які деплояться окремо й працюють разом:
+
+| Частина | Куди | Чому |
+|---|---|---|
+| `web/` (Next.js) | **Vercel** | serverless — натив для Next, автодеплой з GitHub |
+| `agent/` (Python-воркер) | **LiveKit Cloud Agents** | потрібен довгоживучий процес, не serverless |
+
+### 1. Веб-фронтенд → Vercel
+
+1. **Import Project** → обери GitHub-репо `pizza-voice-agent`.
+2. **Root Directory: `web`** (важливо — це монорепо; Next.js визначиться автоматично).
+3. Додай **Environment Variables**:
+
+   ```
+   LIVEKIT_URL=wss://<your-project>.livekit.cloud
+   LIVEKIT_API_KEY=API...
+   LIVEKIT_API_SECRET=...
+   OPENAI_API_KEY=sk-...          # для LLM-судді на /analytics
+   # CALLS_DISABLED=1             # (необов'язково) вимкнути голосове демо без редеплою
+   ```
+
+4. **Deploy.** Далі кожен push у `main` → автодеплой.
+
+### 2. Агент-воркер → LiveKit Cloud Agents
+
+Потрібен [LiveKit CLI](https://docs.livekit.io/home/cli/cli-setup/) (`lk`):
+
+```bash
+lk cloud auth                      # автентифікація у твоєму LiveKit-проєкті
+cd agent
+lk agent create --secrets-file .env .   # збере образ з Dockerfile і задеплоїть
+lk agent status                    # стан
+lk agent logs                      # живі логи
+```
+
+`lk agent create` реєструє агента, передає секрети з `.env` (зокрема `OPENAI_API_KEY`) у
+сховище секретів LiveKit (не в образ — `.env` у `.dockerignore`), збирає образ за
+[`agent/Dockerfile`](agent/Dockerfile) і запускає воркер у режимі `start`. Він створить
+`agent/livekit.toml` з ID агента — закомітьте його. Наступні деплої — `lk agent deploy`.
+
+> Якщо `.env` містить рядки-коментарі — `lk agent create` може спіткнутись; тоді передай
+> ключ явно: `--secrets OPENAI_API_KEY=sk-...`. Змінні `LIVEKIT_*` на Cloud Agents
+> інжектуються платформою автоматично.
+
+### Відомі нюанси live-деплою
+
+- **Токен-роут `/api/token` публічний** (видає LiveKit-токен без автентифікації — це і є демо).
+  Будь-хто з посиланням може витрачати твої LiveKit/OpenAI-хвилини. Постав **ліміти витрат**
+  у LiveKit Cloud і OpenAI; швидкий вимикач — env `CALLS_DISABLED=1`.
+- **Аналітика на Vercel буде порожня:** `data/sessions/*.json` пише воркер на своїй файловій
+  системі (LiveKit Cloud), а serverless-функції Vercel її не бачать. Локально аналітика
+  працює повноцінно. Для live-аналітики потрібне спільне сховище (БД / Vercel Blob) — поза
+  межами демо.
+
 ## ✅ Тести
 
 ```bash
@@ -123,7 +179,12 @@ cd agent
 ## 🔒 Безпека
 
 Репозиторій публічний. Реальні ключі тримаються **лише** у `agent/.env` та `web/.env.local`
-(обидва в `.gitignore`); у репо — лише `*.env.example` з порожніми значеннями.
+(обидва в `.gitignore`); у репо — лише `*.env.example` з порожніми значеннями. На деплої ключі
+живуть у змінних оточення Vercel і в сховищі секретів LiveKit (через `--secrets-file`), не в коді.
+
+Голосовий токен-роут `/api/token` навмисно публічний (це демо без логіну) — див. «Відомі нюанси
+live-деплою» вище щодо лімітів витрат і вимикача `CALLS_DISABLED`. Сторінка `/analytics`
+прихована клієнтським паролем (демо-захист, не криптографічний).
 
 ## 🧰 Стек
 
