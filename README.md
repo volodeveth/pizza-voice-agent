@@ -9,7 +9,7 @@
 
 ## ✨ Можливості
 
-- 🎙️ **Голосовий діалог** через пайплайн STT (`gpt-4o-mini-transcribe`) → LLM (`qwen/qwen3-235b-a22b-2507` через OpenRouter) → TTS (`gpt-4o-mini-tts`)
+- 🎙️ **Голосовий діалог** через пайплайн STT (`gpt-4o-transcribe`) → LLM (`qwen/qwen3-235b-a22b-2507` через OpenRouter) → TTS (ElevenLabs `eleven_flash_v2_5`)
 - 🛠️ **4 tools** з [`agent/fake_api.py`](agent/fake_api.py): меню, деталі страви, оформлення та статус замовлення
 - 🗣️ Природні короткі репліки українською, без markdown
 - 🌐 **Брендований веб-фронтенд** (LiveKit Next.js starter) з візуалізатором голосу й транскриптом
@@ -26,7 +26,7 @@ LiveKit Cloud (SFU-кімната)
    ▼
 Agent Worker (Python, LiveKit Agents)
    └─ AgentSession
-        ├─ STT OpenAI ─► LLM OpenRouter (Qwen3) ─► TTS OpenAI
+        ├─ STT OpenAI ─► LLM OpenRouter (Qwen3) ─► TTS ElevenLabs
         ├─ 4× @function_tool  ──►  fake_api.py
         └─ SessionRecorder ──► data/sessions/*.json
                                   │
@@ -54,7 +54,7 @@ Agent Worker (Python, LiveKit Agents)
 ## ⚙️ Передумови
 
 - Python 3.12, Node.js 20+ (рекомендовано 24), `pnpm`
-- Ключ **OpenAI** (STT/TTS) та ключ **OpenRouter** (LLM агента і LLM-суддя)
+- Ключі **OpenAI** (STT), **OpenRouter** (LLM агента і LLM-суддя), **ElevenLabs** (TTS)
 - Безкоштовний проєкт **LiveKit Cloud** (https://cloud.livekit.io) — для веб/хмарного режиму
 
 ## 🚀 Запуск агента
@@ -71,6 +71,7 @@ cp .env.example .env        # і заповніть значення (див. н
 ```
 OPENAI_API_KEY=sk-...
 OPENROUTER_API_KEY=sk-or-...
+ELEVENLABS_API_KEY=sk_...
 LIVEKIT_URL=wss://<your-project>.livekit.cloud
 LIVEKIT_API_KEY=API...
 LIVEKIT_API_SECRET=...
@@ -199,5 +200,6 @@ live-деплою» вище щодо лімітів витрат і вимик�
 
 ## 🧰 Стек
 
-LiveKit Agents 1.6 · OpenAI STT/TTS · OpenRouter (`qwen/qwen3-235b-a22b-2507`) · Python 3.12 ·
-pytest · Next.js (App Router) · TypeScript · OpenRouter `deepseek/deepseek-v4-pro` (LLM-as-judge).
+LiveKit Agents 1.6 · OpenAI STT · ElevenLabs TTS · OpenRouter (`qwen/qwen3-235b-a22b-2507`) ·
+Python 3.12 · pytest · Next.js (App Router) · TypeScript · OpenRouter `deepseek/deepseek-v4-pro`
+(LLM-as-judge).

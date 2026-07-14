@@ -17,7 +17,7 @@ from livekit.agents import (
     cli,
     function_tool,
 )
-from livekit.plugins import openai, silero
+from livekit.plugins import elevenlabs, openai, silero
 
 import fake_api
 from recorder import SessionRecorder
@@ -166,14 +166,13 @@ async def entrypoint(ctx: JobContext) -> None:
             app_name="pizza-voice-agent",
             temperature=0.4,  # менше обмовок/суржику в українській
         ),
-        tts=openai.TTS(
-            model="gpt-4o-mini-tts",
-            voice="sage",
-            instructions=(
-                "Говори природною літературною українською мовою без іноземного акценту. "
-                "Спокійний, дружній тон дорослої людини, помірний темп, чітка вимова. "
-                "Без театральності й перебільшених емоцій."
-            ),
+        # ElevenLabs Flash v2.5: помітно природніша українська за OpenAI TTS.
+        # Голос міняється через env без перезбірки образу.
+        tts=elevenlabs.TTS(
+            model="eleven_flash_v2_5",
+            voice_id=os.environ.get("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL"),  # Sarah
+            language="uk",
+            api_key=os.environ.get("ELEVENLABS_API_KEY"),
         ),
     )
 
