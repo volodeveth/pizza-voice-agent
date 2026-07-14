@@ -1,63 +1,69 @@
+"""Mock-API піцерії: меню, замовлення і статуси в пам'яті процесу.
+
+Імітує бекенд закладу для голосового агента: чотири функції, які агент
+викликає через function calling. Дані скидаються при перезапуску воркера.
+"""
+
 from __future__ import annotations
 
+from itertools import count
 from typing import Any
-
 
 MENU: list[dict[str, Any]] = [
     # Піци
-    {"id": "pz1", "name": "Маргарита", "category": "pizza", "price": 189, "available": True,
-     "description": "Томатний соус, моцарела, свіжий базилік", "size_cm": 30},
-    {"id": "pz2", "name": "Пепероні", "category": "pizza", "price": 229, "available": True,
-     "description": "Томатний соус, моцарела, пепероні", "size_cm": 30},
-    {"id": "pz3", "name": "Чотири сири", "category": "pizza", "price": 259, "available": True,
-     "description": "Моцарела, горгонзола, пармезан, чеддер", "size_cm": 30},
-    {"id": "pz4", "name": "Гавайська", "category": "pizza", "price": 219, "available": False,
-     "description": "Томатний соус, моцарела, шинка, ананас", "size_cm": 30},
-    {"id": "pz5", "name": "Барбекю з куркою", "category": "pizza", "price": 249, "available": True,
-     "description": "Соус BBQ, моцарела, куряче філе, червона цибуля", "size_cm": 30},
+    {"id": "pz1", "name": "Маргарита", "category": "pizza", "price": 179, "available": True,
+     "description": "Соус із томатів сан-марцано, фіор ді латте, свіжий базилік", "size_cm": 30},
+    {"id": "pz2", "name": "Пепероні", "category": "pizza", "price": 235, "available": True,
+     "description": "Подвійна пепероні, моцарела, томатний соус, орегано", "size_cm": 30},
+    {"id": "pz3", "name": "Кватро Формаджі", "category": "pizza", "price": 269, "available": True,
+     "description": "Моцарела, дор блю, пармезан, емменталь на вершковій основі", "size_cm": 30},
+    {"id": "pz4", "name": "Прошуто е Фунгі", "category": "pizza", "price": 255, "available": False,
+     "description": "Прошуто котто, печериці, моцарела, томатний соус", "size_cm": 30},
+    {"id": "pz5", "name": "Діабло", "category": "pizza", "price": 245, "available": True,
+     "description": "Салямі пікант, халапеньйо, моцарела, гострий соус чилі", "size_cm": 30},
     # Напої
-    {"id": "dr1", "name": "Coca-Cola 0.5л", "category": "drinks", "price": 49, "available": True,
-     "description": "Класична Кока-Кола", "size_cm": None},
-    {"id": "dr2", "name": "Сік яблучний 0.33л", "category": "drinks", "price": 39, "available": True,
-     "description": "Натуральний яблучний сік", "size_cm": None},
-    {"id": "dr3", "name": "Вода негазована 0.5л", "category": "drinks", "price": 29, "available": True,
-     "description": "Мінеральна вода без газу", "size_cm": None},
+    {"id": "dr1", "name": "Лимонад домашній 0.4л", "category": "drinks", "price": 55, "available": True,
+     "description": "Лимонад власного приготування з м'ятою", "size_cm": None},
+    {"id": "dr2", "name": "Сік апельсиновий 0.3л", "category": "drinks", "price": 45, "available": True,
+     "description": "Свіжовичавлений апельсиновий сік", "size_cm": None},
+    {"id": "dr3", "name": "Вода мінеральна 0.5л", "category": "drinks", "price": 25, "available": True,
+     "description": "Негазована мінеральна вода", "size_cm": None},
     # Десерти
-    {"id": "ds1", "name": "Тірамісу", "category": "desserts", "price": 89, "available": True,
-     "description": "Класичний італійський десерт з маскарпоне та кавою", "size_cm": None},
-    {"id": "ds2", "name": "Чізкейк", "category": "desserts", "price": 79, "available": True,
-     "description": "Ніжний чізкейк з ягідним соусом", "size_cm": None},
+    {"id": "ds1", "name": "Тірамісу", "category": "desserts", "price": 95, "available": True,
+     "description": "Домашній тірамісу з маскарпоне та еспресо", "size_cm": None},
+    {"id": "ds2", "name": "Панакота", "category": "desserts", "price": 85, "available": True,
+     "description": "Вершкова панакота з малиновим соусом", "size_cm": None},
 ]
 
 ORDERS: dict[str, dict[str, Any]] = {
     "ORD-101": {
         "id": "ORD-101",
-        "customer_name": "Дмитро Шевченко",
-        "phone": "+380991234567",
-        "address": "вул. Центральна, 12, кв. 5",
+        "customer_name": "Тарас Мельник",
+        "phone": "+380671234501",
+        "address": "вул. Виноградна, 3, кв. 7",
         "items": [
-            {"id": "pz2", "name": "Пепероні", "quantity": 1, "price": 229},
-            {"id": "dr1", "name": "Coca-Cola 0.5л", "quantity": 2, "price": 49},
+            {"id": "pz5", "name": "Діабло", "quantity": 1, "price": 245},
+            {"id": "dr1", "name": "Лимонад домашній 0.4л", "quantity": 2, "price": 55},
         ],
-        "total": 327,
+        "total": 355,
         "status": "cooking",
         "status_label": "Готується",
     },
     "ORD-102": {
         "id": "ORD-102",
-        "customer_name": "Олена Бондар",
-        "phone": "+380671112233",
-        "address": "просп. Миру, 7, кв. 18",
+        "customer_name": "Ірина Ковальчук",
+        "phone": "+380509876543",
+        "address": "просп. Соборний, 21, кв. 44",
         "items": [
-            {"id": "pz1", "name": "Маргарита", "quantity": 2, "price": 189},
+            {"id": "pz1", "name": "Маргарита", "quantity": 2, "price": 179},
         ],
-        "total": 378,
+        "total": 358,
         "status": "delivering",
         "status_label": "Їде до вас",
     },
 }
 
-_next_order_id = 103
+_order_ids = count(103)
 
 _CATEGORY_ALIASES: dict[str, str] = {
     "піца": "pizza",
@@ -69,6 +75,9 @@ _CATEGORY_ALIASES: dict[str, str] = {
     "десерти": "desserts",
 }
 
+
+def _find_item(item_id: str) -> dict[str, Any] | None:
+    return next((i for i in MENU if i["id"] == item_id), None)
 
 
 def get_menu(category: str | None = None) -> list[dict[str, Any]]:
@@ -86,7 +95,7 @@ def get_menu(category: str | None = None) -> list[dict[str, Any]]:
 
 def get_item_details(item_id: str) -> dict[str, Any]:
     """Повна інформація про позицію меню: склад, ціна, розмір, наявність."""
-    item = next((i for i in MENU if i["id"] == item_id), None)
+    item = _find_item(item_id)
     if item is None:
         return {"success": False, "error": "Позицію не знайдено"}
     return {"success": True, **item}
@@ -99,24 +108,22 @@ def create_order(
     address: str,
 ) -> dict[str, Any]:
     """Оформлює замовлення. items — список {id, quantity}."""
-    global _next_order_id
-
-    order_items = []
+    order_items: list[dict[str, Any]] = []
     total = 0
 
     for entry in items:
-        item = next((m for m in MENU if m["id"] == entry["id"]), None)
+        item = _find_item(entry["id"])
         if item is None:
             return {"success": False, "error": f"Позицію {entry['id']} не знайдено"}
         if not item["available"]:
             return {"success": False, "error": f"«{item['name']}» зараз недоступна"}
         qty = entry.get("quantity", 1)
-        order_items.append({"id": item["id"], "name": item["name"], "quantity": qty, "price": item["price"]})
+        order_items.append(
+            {"id": item["id"], "name": item["name"], "quantity": qty, "price": item["price"]}
+        )
         total += item["price"] * qty
 
-    order_id = f"ORD-{_next_order_id}"
-    _next_order_id += 1
-
+    order_id = f"ORD-{next(_order_ids)}"
     ORDERS[order_id] = {
         "id": order_id,
         "customer_name": customer_name,
@@ -149,5 +156,3 @@ def get_order_status(order_id: str) -> dict[str, Any]:
         "items": [f"{i['name']} x{i['quantity']}" for i in order["items"]],
         "total": order["total"],
     }
-    
-    

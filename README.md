@@ -5,8 +5,6 @@
 відстежує замовлення — викликаючи реальні функції через function calling. Додатково має
 сторінку **аналітики якості (MEO)** з оцінкою діалогів LLM-суддею.
 
-> Тестове завдання на позицію AI Engineer. Повне ТЗ — [`ТЗ AI Engineer.md`](ТЗ%20AI%20Engineer.md).
-
 ## ✨ Можливості
 
 - 🎙️ **Голосовий діалог** через пайплайн STT (`gpt-4o-transcribe`) → LLM (`qwen/qwen3-235b-a22b-2507` через OpenRouter) → TTS (ElevenLabs `eleven_flash_v2_5`)
@@ -44,7 +42,7 @@ Agent Worker (Python, LiveKit Agents)
 ├─ agent/                 # Python-воркер
 │  ├─ agent.py            # Assistant (4 tools) + STT/LLM/TTS-сесія + entrypoint
 │  ├─ recorder.py         # запис сесій (транскрипт/tools/метрики) → JSON
-│  ├─ fake_api.py         # надані mock-дані та функції (БЕЗ ЗМІН)
+│  ├─ fake_api.py         # mock-API піцерії: меню, замовлення, статуси
 │  ├─ tests/              # юніт-тести (pytest)
 │  └─ requirements.txt
 ├─ web/                   # Next.js фронтенд (LiveKit starter) + /analytics
@@ -203,3 +201,7 @@ live-деплою» вище щодо лімітів витрат і вимик�
 LiveKit Agents 1.6 · OpenAI STT · ElevenLabs TTS · OpenRouter (`qwen/qwen3-235b-a22b-2507`) ·
 Python 3.12 · pytest · Next.js (App Router) · TypeScript · OpenRouter `deepseek/deepseek-v4-pro`
 (LLM-as-judge).
+
+Веб-фронтенд побудовано на базі відкритого шаблону
+[agent-starter-react](https://github.com/livekit-examples/agent-starter-react) від LiveKit
+(MIT, ліцензія збережена у `web/LICENSE`) — суттєво перероблений під піцерію.

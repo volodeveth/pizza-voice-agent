@@ -38,13 +38,13 @@ def test_create_order_computes_total():
         address="вул. Тестова, 1",
     )
     assert res["success"] is True
-    assert res["total"] == 189 * 2 + 49
+    assert res["total"] == 179 * 2 + 55
     assert res["order_id"].startswith("ORD-")
 
 
 def test_create_order_rejects_unavailable_item():
     res = fake_api.create_order(
-        items=[{"id": "pz4", "quantity": 1}],  # Гавайська — available=False
+        items=[{"id": "pz4", "quantity": 1}],  # Прошуто е Фунгі — available=False
         customer_name="Тест",
         phone="+380000000000",
         address="вул. Тестова, 1",
