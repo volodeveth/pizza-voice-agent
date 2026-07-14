@@ -20,10 +20,15 @@ export async function POST(req: Request) {
   const session = (await listSessions()).find((s) => s.room === room);
   if (!session) return NextResponse.json({ error: 'session not found' }, { status: 404 });
 
-  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  // LLM-as-judge через OpenRouter (DeepSeek V4 Pro — суттєво дешевше за gpt-4.1)
+  const client = new OpenAI({
+    apiKey: process.env.OPENROUTER_API_KEY,
+    baseURL: 'https://openrouter.ai/api/v1',
+    defaultHeaders: { 'X-Title': 'pizza-voice-agent' },
+  });
   try {
     const completion = await client.chat.completions.create({
-      model: 'gpt-4.1',
+      model: 'deepseek/deepseek-v4-pro',
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: RUBRIC },

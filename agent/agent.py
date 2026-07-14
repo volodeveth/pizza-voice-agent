@@ -11,12 +11,13 @@ from livekit.agents import (
     Agent,
     AgentSession,
     JobContext,
+    JobProcess,
     RunContext,
     WorkerOptions,
     cli,
     function_tool,
 )
-from livekit.plugins import openai
+from livekit.plugins import openai, silero
 
 import fake_api
 from recorder import SessionRecorder
@@ -134,13 +135,28 @@ def _to_plain(obj: Any) -> Any:
     return obj
 
 
+def prewarm(proc: JobProcess) -> None:
+    proc.userdata["vad"] = silero.VAD.load()
+
+
 async def entrypoint(ctx: JobContext) -> None:
     await ctx.connect()
 
     recorder = SessionRecorder(room=ctx.room.name)
 
+    # Пайплайн STT → LLM → TTS замість OpenAI Realtime: мозок агента — дешева
+    # китайська модель через OpenRouter, голосова частина лишається на OpenAI.
     session = AgentSession(
-        llm=openai.realtime.RealtimeModel(model="gpt-realtime-mini", voice="marin"),
+        vad=ctx.proc.userdata["vad"],
+        stt=openai.STT(model="gpt-4o-mini-transcribe", language="uk"),
+        # Qwen3-235B Instruct: TTFT ~0.7s, точний tool calling, чиста українська;
+        # non-thinking — без reasoning-затримок. DeepSeek V4 Flash — фолбек.
+        llm=openai.LLM.with_openrouter(
+            model="qwen/qwen3-235b-a22b-2507",
+            fallback_models=["deepseek/deepseek-v4-flash"],
+            app_name="pizza-voice-agent",
+        ),
+        tts=openai.TTS(model="gpt-4o-mini-tts", voice="coral"),
     )
 
     @session.on("conversation_item_added")
@@ -198,4 +214,4 @@ async def entrypoint(ctx: JobContext) -> None:
 
 
 if __name__ == "__main__":
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm))

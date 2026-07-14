@@ -1,6 +1,6 @@
 # 🍕 Голосовий агент для піцерії
 
-Голосовий AI-помічник піцерії на **LiveKit Agents** + **OpenAI Realtime API**. Веде
+Голосовий AI-помічник піцерії на **LiveKit Agents** (STT → LLM → TTS: OpenAI voice + Qwen3 через OpenRouter). Веде
 природний голосовий діалог українською: показує меню, розповідає про страви, оформлює та
 відстежує замовлення — викликаючи реальні функції через function calling. Додатково має
 сторінку **аналітики якості (MEO)** з оцінкою діалогів LLM-суддею.
@@ -9,7 +9,7 @@
 
 ## ✨ Можливості
 
-- 🎙️ **Голосовий діалог** мова-в-мову через OpenAI Realtime (`gpt-realtime-mini`)
+- 🎙️ **Голосовий діалог** через пайплайн STT (`gpt-4o-mini-transcribe`) → LLM (`qwen/qwen3-235b-a22b-2507` через OpenRouter) → TTS (`gpt-4o-mini-tts`)
 - 🛠️ **4 tools** з [`agent/fake_api.py`](agent/fake_api.py): меню, деталі страви, оформлення та статус замовлення
 - 🗣️ Природні короткі репліки українською, без markdown
 - 🌐 **Брендований веб-фронтенд** (LiveKit Next.js starter) з візуалізатором голосу й транскриптом
@@ -26,7 +26,7 @@ LiveKit Cloud (SFU-кімната)
    ▼
 Agent Worker (Python, LiveKit Agents)
    └─ AgentSession
-        ├─ OpenAI RealtimeModel("gpt-realtime-mini")   ← мова-в-мову
+        ├─ STT OpenAI ─► LLM OpenRouter (Qwen3) ─► TTS OpenAI
         ├─ 4× @function_tool  ──►  fake_api.py
         └─ SessionRecorder ──► data/sessions/*.json
                                   │
@@ -42,7 +42,7 @@ Agent Worker (Python, LiveKit Agents)
 ```
 .
 ├─ agent/                 # Python-воркер
-│  ├─ agent.py            # Assistant (4 tools) + Realtime-сесія + entrypoint
+│  ├─ agent.py            # Assistant (4 tools) + STT/LLM/TTS-сесія + entrypoint
 │  ├─ recorder.py         # запис сесій (транскрипт/tools/метрики) → JSON
 │  ├─ fake_api.py         # надані mock-дані та функції (БЕЗ ЗМІН)
 │  ├─ tests/              # юніт-тести (pytest)
@@ -54,7 +54,7 @@ Agent Worker (Python, LiveKit Agents)
 ## ⚙️ Передумови
 
 - Python 3.12, Node.js 20+ (рекомендовано 24), `pnpm`
-- Ключ **OpenAI** з доступом до Realtime API
+- Ключ **OpenAI** (STT/TTS) та ключ **OpenRouter** (LLM агента і LLM-суддя)
 - Безкоштовний проєкт **LiveKit Cloud** (https://cloud.livekit.io) — для веб/хмарного режиму
 
 ## 🚀 Запуск агента
@@ -70,12 +70,13 @@ cp .env.example .env        # і заповніть значення (див. н
 
 ```
 OPENAI_API_KEY=sk-...
+OPENROUTER_API_KEY=sk-or-...
 LIVEKIT_URL=wss://<your-project>.livekit.cloud
 LIVEKIT_API_KEY=API...
 LIVEKIT_API_SECRET=...
 ```
 
-**Локальний тест у терміналі** (потрібен лише `OPENAI_API_KEY`, мікрофон і динаміки):
+**Локальний тест у терміналі** (потрібні `OPENAI_API_KEY` і `OPENROUTER_API_KEY`, мікрофон і динаміки):
 
 ```bash
 .venv\Scripts\python agent.py console
@@ -92,7 +93,7 @@ LIVEKIT_API_SECRET=...
 ```bash
 cd web
 pnpm install
-cp .env.example .env.local   # впишіть LIVEKIT_URL/KEY/SECRET та OPENAI_API_KEY
+cp .env.example .env.local   # впишіть LIVEKIT_URL/KEY/SECRET та OPENROUTER_API_KEY
 pnpm dev                     # http://localhost:3000
 ```
 
@@ -128,7 +129,7 @@ http://localhost:3000 і почніть розмову.
    LIVEKIT_URL=wss://<your-project>.livekit.cloud
    LIVEKIT_API_KEY=API...
    LIVEKIT_API_SECRET=...
-   OPENAI_API_KEY=sk-...          # для LLM-судді на /analytics
+   OPENROUTER_API_KEY=sk-or-...   # для LLM-судді на /analytics (deepseek/deepseek-v4-pro)
    # CALLS_DISABLED=1             # (необов'язково) вимкнути голосове демо без редеплою
    ```
 
@@ -146,7 +147,8 @@ lk agent status                    # стан
 lk agent logs                      # живі логи
 ```
 
-`lk agent create` реєструє агента, передає секрети з `.env` (зокрема `OPENAI_API_KEY`) у
+`lk agent create` реєструє агента, передає секрети з `.env` (зокрема `OPENAI_API_KEY` і
+`OPENROUTER_API_KEY`) у
 сховище секретів LiveKit (не в образ — `.env` у `.dockerignore`), збирає образ за
 [`agent/Dockerfile`](agent/Dockerfile) і запускає воркер у режимі `start`. Він створить
 `agent/livekit.toml` з ID агента — закомітьте його. Наступні деплої — `lk agent deploy`.
@@ -162,7 +164,7 @@ lk agent logs                      # живі логи
   - вбудований **rate-limit** — 5 стартів дзвінка з IP за хвилину + глобальний бекстоп 30/хв
     (in-memory, best-effort: на serverless лічильник per-instance і скидається на cold start;
     для durable — Upstash Redis);
-  - **ліміти витрат** у LiveKit Cloud і OpenAI — постав обов'язково (це жорстка стеля рахунку);
+  - **ліміти витрат** у LiveKit Cloud, OpenAI та OpenRouter — постав обов'язково (це жорстка стеля рахунку);
   - швидкий вимикач демо — env `CALLS_DISABLED=1` (без редеплою).
 - **Аналітика на проді — через спільне Postgres (Vercel/Neon).** Локально дані беруться з
   `data/sessions/*.json`; на проді і воркер (пише), і `/analytics` (читає) ходять у спільну
@@ -197,5 +199,5 @@ live-деплою» вище щодо лімітів витрат і вимик�
 
 ## 🧰 Стек
 
-LiveKit Agents 1.6 · OpenAI Realtime API (`gpt-realtime-mini`) · Python 3.12 · pytest ·
-Next.js (App Router) · TypeScript · OpenAI (LLM-as-judge).
+LiveKit Agents 1.6 · OpenAI STT/TTS · OpenRouter (`qwen/qwen3-235b-a22b-2507`) · Python 3.12 ·
+pytest · Next.js (App Router) · TypeScript · OpenRouter `deepseek/deepseek-v4-pro` (LLM-as-judge).

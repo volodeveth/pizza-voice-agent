@@ -1,6 +1,7 @@
 # Секрети — НІКОЛИ не комітити
 .env
 .env.local
+.env.txt
 токен.txt
 
 # Дані реальних сесій (містять розмови) — лишаємо лише .gitkeep
@@ -39,3 +40,5 @@ CLAUDE.md
 
 # Vercel
 .vercel/
+.vercel
+.env*
